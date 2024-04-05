@@ -26,4 +26,20 @@ public class JsonProcessor
             Longitude = longitude
         };
     }
+    
+    public async Task<SunriseSunset> ProcessSunriseSunsetJson(Task<string> dataTask)
+    {
+        string data = await dataTask;
+        JsonDocument json = JsonDocument.Parse(data);
+        JsonElement root = json.RootElement;
+        var sunrise = root.GetProperty("results").GetProperty("sunrise").GetDateTime();
+        var sunset = root.GetProperty("results").GetProperty("sunset").GetDateTime();
+        _logger.LogInformation($"Sunrise: {sunrise}, Sunset: {sunset}");
+        var sunriseSunset = new SunriseSunset
+        {
+            Sunrise = sunrise,
+            Sunset = sunset
+        };
+        return sunriseSunset;
+    }
 }
