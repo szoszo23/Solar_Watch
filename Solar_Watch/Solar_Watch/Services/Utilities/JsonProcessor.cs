@@ -3,7 +3,7 @@ using Solar_Watch.Model;
 
 namespace Solar_Watch.Services.Utilities;
 
-public class JsonProcessor
+public class JsonProcessor : IJsonProcessor
 {
     private readonly ILogger<JsonProcessor> _logger;
 
@@ -41,5 +41,16 @@ public class JsonProcessor
             Sunset = sunset
         };
         return sunriseSunset;
+    }
+    
+    public string ProcessCityJson(string data)
+    {
+        JsonDocument json = JsonDocument.Parse(data);
+        JsonElement root = json.RootElement;
+
+        var country = root[0].GetProperty("country").GetString();
+
+        return country;
+
     }
 }
