@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Solar_Watch.Services;
+using Solar_Watch.Services.Repositories;
 using Solar_Watch.Services.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +28,8 @@ builder.Services.AddDbContext<SolarWatchDbContext>(options =>
 });
 builder.Services.AddSingleton<IJsonProcessor,JsonProcessor>();
 builder.Services.AddSingleton<ISunApi, SunApi>();
+builder.Services.AddScoped<CityRepository>();
+builder.Services.AddScoped<SunriseSunsetRepository>();
 
 var app = builder.Build();
 
