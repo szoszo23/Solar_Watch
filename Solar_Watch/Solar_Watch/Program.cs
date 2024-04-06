@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using Solar_Watch.Services;
 using Solar_Watch.Services.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +17,13 @@ builder.Services.AddSingleton<IGeoCodingApi>(provider =>
     DotNetEnv.Env.Load();
     var apiKey = DotNetEnv.Env.GetString("API_KEY");
     return new GeoCodingApi(logger, apiKey);
+});
+
+builder.Services.AddDbContext<SolarWatchDbContext>(options =>
+{
+    DotNetEnv.Env.Load();
+    var connString = DotNetEnv.Env.GetString("CONNECTION_STRING");
+    options.UseSqlServer(connString);
 });
 builder.Services.AddSingleton<IJsonProcessor,JsonProcessor>();
 builder.Services.AddSingleton<ISunApi, SunApi>();
