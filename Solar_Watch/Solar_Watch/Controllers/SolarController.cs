@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Solar_Watch.Model;
+using Solar_Watch.Services.Repositories;
 using Solar_Watch.Services.Utilities;
 
 namespace Solar_Watch.Controllers;
@@ -14,8 +15,10 @@ public class SolarController : ControllerBase
     private readonly string _apiKey;
     private readonly ISunApi _sunApi;
     private readonly IGeoCodingApi _geoCodingApi;
+    private readonly CityRepository _cityRepository;
+    private readonly SunriseSunsetRepository _sunriseSunsetRepository;
     public SolarController(ILogger<SolarController> logger, IJsonProcessor jsonProcessor, ISunApi sunApi,
-        IGeoCodingApi geoCodingApi)
+        IGeoCodingApi geoCodingApi, CityRepository cityRepository, SunriseSunsetRepository sunriseSunsetRepository)
     {
         _logger = logger;
         _jsonProcessor = jsonProcessor;
@@ -23,57 +26,69 @@ public class SolarController : ControllerBase
         _geoCodingApi = geoCodingApi;
         DotNetEnv.Env.Load();
         _apiKey = DotNetEnv.Env.GetString("API_KEY");
+        _cityRepository = cityRepository;
+        _sunriseSunsetRepository = sunriseSunsetRepository;
     }
 
     [HttpGet("GetSunriseSunset")]
     public async Task<ActionResult<SolarWatch>> GetSunriseSunset([Required] string city, [Required] DateTime date)
     {
-        City searchedCity;
-        var geoCoordinatesTask = _geoCodingApi.GetCoordinates(city);
-        var geoCoordinates = await geoCoordinatesTask;
-        var coordinatesTask = _jsonProcessor.ProcessCoordinatesJson(geoCoordinatesTask);
-        var coordinates = await coordinatesTask;
-        var country = _jsonProcessor.ProcessCityJson(geoCoordinates);
+        var existingCity = _cityRepository.GetByName(city);
 
-        if (coordinates != null)
+
+        if (existingCity == null)
         {
-            searchedCity = new City()
+            var geoCoordinatesTask = _geoCodingApi.GetCoordinates(city);
+            var geoCoordinates = await geoCoordinatesTask;
+            var coordinatesTask = _jsonProcessor.ProcessCoordinatesJson(geoCoordinatesTask);
+            var coordinates = await coordinatesTask;
+            var country = _jsonProcessor.ProcessCityJson(geoCoordinates);
+
+            if (coordinates != null)
             {
-                Name = city,
-                Coordinates = coordinates,
-                Country = country
-            };
-        }
-        else
-        {
-            return NotFound("City not found");
-        }
-
-        SunriseSunset searchedSunriseSunset;
-        var sunriseTask = _sunApi.GetSunriseSunset(searchedCity.Coordinates, date);
-        var sunriseJsonTask = _jsonProcessor.ProcessSunriseSunsetJson(sunriseTask);
-        var sunriseJson = await sunriseJsonTask;
-
-        if (sunriseJson != null)
-        {
-            searchedSunriseSunset = new SunriseSunset()
+                existingCity = new City()
+                {
+                    Name = city,
+                    Coordinates = coordinates,
+                    Country = country
+                };
+            }
+            else
             {
-                City = searchedCity,
-                Sunrise = sunriseJson.Sunrise,
-                Sunset = sunriseJson.Sunset
-            };
-        }
-        else
-        {
-            return NotFound("Sunrise sunset data not found");
+                return NotFound("City not found");
+            }
         }
 
-        var solarWatch = new SolarWatch()
+        var existingSunrise = _sunriseSunsetRepository.GetByName(existingCity.CityId, date);
+        if (existingSunrise == null)
+        {
+            var sunriseTask = _sunApi.GetSunriseSunset(existingCity.Coordinates, date);
+            var sunriseJsonTask = _jsonProcessor.ProcessSunriseSunsetJson(sunriseTask);
+            var sunriseJson = await sunriseJsonTask;
+
+            if (sunriseJson != null)
+            {
+                existingSunrise = new SunriseSunset()
+                {
+                    City = existingCity,
+                    Sunrise = sunriseJson.Sunrise,
+                    Sunset = sunriseJson.Sunset
+                };
+                _sunriseSunsetRepository.Add(existingSunrise);
+            }
+            else
+            {
+                return NotFound("Sunrise sunset data not found");
+            }
+        }
+
+
+        var solarWatch = new SolarWatch
         {
             Date = date,
             City = city,
-            Sunrise = searchedSunriseSunset.Sunrise,
-            Sunset = searchedSunriseSunset.Sunset
+            Sunrise = existingSunrise.Sunrise,
+            Sunset = existingSunrise.Sunset
         };
 
         return Ok(solarWatch);
