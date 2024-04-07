@@ -44,19 +44,12 @@ public class SolarController : ControllerBase
             var coordinates = await coordinatesTask;
             var country = _jsonProcessor.ProcessCityJson(geoCoordinates);
 
-            if (coordinates != null)
+            existingCity = new City()
             {
-                existingCity = new City()
-                {
-                    Name = city,
-                    Coordinates = coordinates,
-                    Country = country
-                };
-            }
-            else
-            {
-                return NotFound("City not found");
-            }
+                Name = city,
+                Coordinates = coordinates,
+                Country = country
+            };
         }
 
         var existingSunrise = _sunriseSunsetRepository.GetByName(existingCity.CityId, date);

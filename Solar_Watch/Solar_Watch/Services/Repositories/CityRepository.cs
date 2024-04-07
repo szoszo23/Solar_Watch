@@ -4,7 +4,7 @@ namespace Solar_Watch.Services.Repositories;
 
 public class CityRepository
 {
-    private SolarWatchDbContext _dbContext;
+    private readonly SolarWatchDbContext _dbContext;
 
     public CityRepository(SolarWatchDbContext dbContext)
     {
@@ -19,7 +19,6 @@ public class CityRepository
 
     public City? GetByName(string name)
     {
-
         return _dbContext.Cities.FirstOrDefault(c => c.Name == name);
     }
 
