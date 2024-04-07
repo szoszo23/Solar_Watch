@@ -1,4 +1,8 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Solar_Watch.Model;
 using Solar_Watch.Services;
 using Solar_Watch.Services.Repositories;
 using Solar_Watch.Services.Utilities;
@@ -12,6 +16,25 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+        var issuerSigningKey = builder.Configuration.GetSection("IssuerSigningKey").Value;
+        options.TokenValidationParameters = new TokenValidationParameters()
+        {
+            ClockSkew = TimeSpan.Zero,
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings.ValidIssuer,
+            ValidAudience = jwtSettings.ValidAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(issuerSigningKey)),
+        };
+    });
+
 builder.Services.AddSingleton<IGeoCodingApi>(provider =>
 {
     var logger = provider.GetRequiredService<ILogger<GeoCodingApi>>();
@@ -21,6 +44,12 @@ builder.Services.AddSingleton<IGeoCodingApi>(provider =>
 });
 
 builder.Services.AddDbContext<SolarWatchDbContext>(options =>
+{
+    DotNetEnv.Env.Load();
+    var connString = DotNetEnv.Env.GetString("CONNECTION_STRING");
+    options.UseSqlServer(connString);
+});
+builder.Services.AddDbContext<UserContext>(options =>
 {
     DotNetEnv.Env.Load();
     var connString = DotNetEnv.Env.GetString("CONNECTION_STRING");
@@ -42,6 +71,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
