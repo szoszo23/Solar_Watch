@@ -87,4 +87,21 @@ public class SolarController : ControllerBase
 
         return Ok(solarWatch);
     }
+    
+    [HttpDelete("SunriseSunset"), Authorize(Roles = "Admin")]
+    public async Task<ActionResult<SolarWatch>> DeleteSunriseSunset([Required] string city, [Required] DateTime date)
+    {
+        var existingCity = _cityRepository.GetByName(city);
+
+
+        if (existingCity != null)
+        {
+            _cityRepository.Delete(existingCity);
+            return Ok(existingCity);
+        }
+        else
+        {
+            return NotFound("city not found");
+        }
+    }
 }
