@@ -37,6 +37,13 @@ public class AuthService : IAuthService
         result.ErrorMessages.Add("Bad credentials", "Invalid email");
         return result;
     }
+    
+    private static AuthResult InvalidPassword(string email, string userName)
+    {
+        var result = new AuthResult(false, email, userName, "");
+        result.ErrorMessages.Add("Bad credentials", "Invalid password");
+        return result;
+    }
 
     private static AuthResult FailedRegistration(IdentityResult result, string email, string username)
     {
