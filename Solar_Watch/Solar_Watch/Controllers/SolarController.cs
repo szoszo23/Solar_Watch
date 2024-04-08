@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Solar_Watch.Model;
 using Solar_Watch.Services.Repositories;
@@ -30,7 +31,7 @@ public class SolarController : ControllerBase
         _sunriseSunsetRepository = sunriseSunsetRepository;
     }
 
-    [HttpGet("GetSunriseSunset")]
+    [HttpGet("GetSunriseSunset"), Authorize]
     public async Task<ActionResult<SolarWatch>> GetSunriseSunset([Required] string city, [Required] DateTime date)
     {
         var existingCity = _cityRepository.GetByName(city);
