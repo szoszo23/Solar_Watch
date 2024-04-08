@@ -13,7 +13,14 @@ public class AuthenticationSeeder
         this.userManager = userManager;
     }
     
-    
+    public void AddRoles()
+    {
+        var tAdmin = CreateAdminRole(roleManager);
+        tAdmin.Wait();
+
+        var tUser = CreateUserRole(roleManager);
+        tUser.Wait();
+    }
     private async Task CreateAdminRole(RoleManager<IdentityRole> roleManager)
     {
         await roleManager.CreateAsync(new IdentityRole("Admin")); //The role string should better be stored as a constant or a value in appsettings
