@@ -18,4 +18,9 @@ public class AuthenticationSeeder
     {
         await roleManager.CreateAsync(new IdentityRole("Admin")); //The role string should better be stored as a constant or a value in appsettings
     }
+    
+    async Task CreateUserRole(RoleManager<IdentityRole> roleManager)
+    {
+        await roleManager.CreateAsync(new IdentityRole("User")); //The role string should better be stored as a constant or a value in appsettings
+    }
 }
