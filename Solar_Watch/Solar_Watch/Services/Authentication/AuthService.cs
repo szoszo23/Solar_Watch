@@ -25,6 +25,19 @@ public class AuthService : IAuthService
         return new AuthResult(true, email, username, "");
     }
 
+    public async Task<AuthResult> LoginAsync(string email, string password)
+    {
+
+        return null;
+    }
+    
+    private static AuthResult InvalidEmail(string email)
+    {
+        var result = new AuthResult(false, email, "", "");
+        result.ErrorMessages.Add("Bad credentials", "Invalid email");
+        return result;
+    }
+
     private static AuthResult FailedRegistration(IdentityResult result, string email, string username)
     {
         var authResult = new AuthResult(false, email, username, "");
