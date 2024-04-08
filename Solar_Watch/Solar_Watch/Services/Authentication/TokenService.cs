@@ -1,9 +1,11 @@
 ﻿using System.Globalization;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+using Solar_Watch.Model;
+using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
 
 namespace Solar_Watch.Services.Authentication;
 
@@ -22,7 +24,15 @@ public class TokenService : ITokenService
         return null;
     }
     
-    
+    private JwtSecurityToken CreateJwtToken(List<Claim> claims, SigningCredentials credentials,
+        DateTime expiration) =>
+        new(
+            _configuration.GetSection("JwtSettings").Get<JwtSettings>().ValidIssuer,
+            _configuration.GetSection("JwtSettings").Get<JwtSettings>().ValidAudience,
+            claims,
+            expires: expiration,
+            signingCredentials: credentials
+        );
     private List<Claim> CreateClaims(IdentityUser user)
     {
         try
