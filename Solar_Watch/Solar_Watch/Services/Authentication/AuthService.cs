@@ -27,6 +27,13 @@ public class AuthService : IAuthService
 
     private static AuthResult FailedRegistration(IdentityResult result, string email, string username)
     {
-        return null;
+        var authResult = new AuthResult(false, email, username, "");
+
+        foreach (var error in result.Errors)
+        {
+            authResult.ErrorMessages.Add(error.Code, error.Description);
+        }
+
+        return authResult;
     }
 }
