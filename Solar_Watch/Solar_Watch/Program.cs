@@ -73,6 +73,7 @@ builder.Services.AddSingleton<ISunApi, SunApi>();
 builder.Services.AddScoped<CityRepository>();
 builder.Services.AddScoped<SunriseSunsetRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
 
 var app = builder.Build();
 
