@@ -18,6 +18,7 @@ public class SolarController : ControllerBase
     private readonly IGeoCodingApi _geoCodingApi;
     private readonly CityRepository _cityRepository;
     private readonly SunriseSunsetRepository _sunriseSunsetRepository;
+
     public SolarController(ILogger<SolarController> logger, IJsonProcessor jsonProcessor, ISunApi sunApi,
         IGeoCodingApi geoCodingApi, CityRepository cityRepository, SunriseSunsetRepository sunriseSunsetRepository)
     {
@@ -31,7 +32,7 @@ public class SolarController : ControllerBase
         _sunriseSunsetRepository = sunriseSunsetRepository;
     }
 
-    [HttpGet("GetSunriseSunset"), Authorize(Roles="User, Admin")]
+    [HttpGet("GetSunriseSunset"), Authorize(Roles = "User, Admin")]
     public async Task<ActionResult<SolarWatch>> GetSunriseSunset([Required] string city, [Required] DateTime date)
     {
         var existingCity = _cityRepository.GetByName(city);
@@ -87,21 +88,67 @@ public class SolarController : ControllerBase
 
         return Ok(solarWatch);
     }
-    
+
     [HttpDelete("SunriseSunset"), Authorize(Roles = "Admin")]
     public async Task<ActionResult<SolarWatch>> DeleteSunriseSunset([Required] string city, [Required] DateTime date)
     {
         var existingCity = _cityRepository.GetByName(city);
 
-
         if (existingCity != null)
         {
-            _cityRepository.Delete(existingCity);
-            return Ok(existingCity);
+            var existingSunrise = _sunriseSunsetRepository.GetByName(existingCity.CityId, date);
+            if (existingSunrise != null)
+            {
+                _sunriseSunsetRepository.Delete(existingSunrise);
+                _cityRepository.Delete(existingCity);
+            }
+
+            return Ok("City and Sunrise sunset deleted");
         }
-        else
+        
+        return NotFound("city not found");
+        
+    }
+
+    [HttpPatch("SunriseSunset"), Authorize(Roles = "Admin")]
+    public async Task<ActionResult<SolarWatch>> UpdateSunriseSunset([Required] string city, [Required] DateTime date,
+        DateTime? sunrise, DateTime? sunset)
+    {
+        var existingCity = _cityRepository.GetByName(city);
+
+        if (existingCity == null)
         {
-            return NotFound("city not found");
+            return NotFound("City not found");
         }
+
+        var existingSunriseSunset = _sunriseSunsetRepository.GetByName(existingCity.CityId, date);
+
+        if (existingSunriseSunset == null)
+        {
+            return NotFound("Sunrise and sunset data not found for the specified city and date");
+        }
+
+        // Update the sunrise and sunset times if provided in the parameters
+        if (sunrise.HasValue)
+        {
+            existingSunriseSunset.Sunrise = sunrise.Value;
+        }
+
+        if (sunset.HasValue)
+        {
+            existingSunriseSunset.Sunset = sunset.Value;
+        }
+
+        _sunriseSunsetRepository.Update(existingSunriseSunset);
+
+        var updatedSolarWatch = new SolarWatch
+        {
+            Date = date,
+            City = city,
+            Sunrise = existingSunriseSunset.Sunrise,
+            Sunset = existingSunriseSunset.Sunset
+        };
+
+        return Ok(updatedSolarWatch);
     }
 }

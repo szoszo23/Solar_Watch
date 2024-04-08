@@ -49,7 +49,7 @@ void AddServices()
         var apiKey = DotNetEnv.Env.GetString("API_KEY");
         return new GeoCodingApi(logger, apiKey);
     });
-    builder.Services.AddSingleton<IJsonProcessor,JsonProcessor>();
+    builder.Services.AddSingleton<IJsonProcessor, JsonProcessor>();
     builder.Services.AddSingleton<ISunApi, SunApi>();
     builder.Services.AddScoped<CityRepository>();
     builder.Services.AddScoped<SunriseSunsetRepository>();
@@ -81,11 +81,11 @@ void ConfigureSwagger()
                 {
                     Reference = new OpenApiReference
                     {
-                        Type=ReferenceType.SecurityScheme,
-                        Id="Bearer"
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
                     }
                 },
-                new string[]{}
+                new string[] { }
             }
         });
     });
@@ -127,7 +127,7 @@ void AddIdentity()
             options.Password.RequireNonAlphanumeric = false;
             options.Password.RequireUppercase = false;
             options.Password.RequireLowercase = false;
-        })
+        }).AddRoles<IdentityRole>()
         .AddEntityFrameworkStores<UserContext>();
 }
 
@@ -135,12 +135,6 @@ void AddDbContext()
 {
     DotNetEnv.Env.Load();
     var connString = DotNetEnv.Env.GetString("CONNECTION_STRING");
-    builder.Services.AddDbContext<SolarWatchDbContext>(options =>
-    {
-        options.UseSqlServer(connString);
-    });
-    builder.Services.AddDbContext<UserContext>(options =>
-    {
-        options.UseSqlServer(connString);
-    });
+    builder.Services.AddDbContext<SolarWatchDbContext>(options => { options.UseSqlServer(connString); });
+    builder.Services.AddDbContext<UserContext>(options => { options.UseSqlServer(connString); });
 }
