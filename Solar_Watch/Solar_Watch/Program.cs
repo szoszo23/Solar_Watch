@@ -19,7 +19,10 @@ AddAuthentication();
 AddIdentity();
 // Add services to the container.
 var app = builder.Build();
-
+using var Scope = app.Services.CreateScope();
+var authenticationSeeder = Scope.ServiceProvider.GetRequiredService<AuthenticationSeeder>();
+authenticationSeeder.AddRoles();
+authenticationSeeder.AddAdmin();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -52,6 +55,7 @@ void AddServices()
     builder.Services.AddScoped<SunriseSunsetRepository>();
     builder.Services.AddScoped<IAuthService, AuthService>();
     builder.Services.AddScoped<ITokenService, TokenService>();
+    builder.Services.AddScoped<AuthenticationSeeder>();
 }
 
 void ConfigureSwagger()
