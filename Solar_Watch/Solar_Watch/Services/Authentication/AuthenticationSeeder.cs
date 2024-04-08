@@ -31,6 +31,11 @@ public class AuthenticationSeeder
         await roleManager.CreateAsync(new IdentityRole("User")); //The role string should better be stored as a constant or a value in appsettings
     }
     
+    public void AddAdmin()
+    {
+        var tAdmin = CreateAdminIfNotExists();
+        tAdmin.Wait();
+    }
     private async Task CreateAdminIfNotExists()
     {
         var adminInDb = await userManager.FindByEmailAsync("admin1@admin.com");
