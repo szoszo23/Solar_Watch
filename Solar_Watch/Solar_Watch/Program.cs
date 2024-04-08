@@ -1,9 +1,11 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Solar_Watch.Model;
 using Solar_Watch.Services;
+using Solar_Watch.Services.Authentication;
 using Solar_Watch.Services.Repositories;
 using Solar_Watch.Services.Utilities;
 
@@ -34,7 +36,18 @@ builder.Services
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(issuerSigningKey)),
         };
     });
-
+builder.Services
+    .AddIdentityCore<IdentityUser>(options =>
+    {
+        options.SignIn.RequireConfirmedAccount = false;
+        options.User.RequireUniqueEmail = true;
+        options.Password.RequireDigit = false;
+        options.Password.RequiredLength = 4;
+        options.Password.RequireNonAlphanumeric = false;
+        options.Password.RequireUppercase = false;
+        options.Password.RequireLowercase = false;
+    })
+    .AddEntityFrameworkStores<UserContext>();
 builder.Services.AddSingleton<IGeoCodingApi>(provider =>
 {
     var logger = provider.GetRequiredService<ILogger<GeoCodingApi>>();
@@ -59,6 +72,7 @@ builder.Services.AddSingleton<IJsonProcessor,JsonProcessor>();
 builder.Services.AddSingleton<ISunApi, SunApi>();
 builder.Services.AddScoped<CityRepository>();
 builder.Services.AddScoped<SunriseSunsetRepository>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 var app = builder.Build();
 
