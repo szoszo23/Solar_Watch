@@ -1,9 +1,36 @@
 ﻿import React from "react";
-
+import { useNavigate } from "react-router-dom";
 function Register() {
-
+    const navigate = useNavigate();
     
-    function handleSubmit(event){
+    async function handleSubmit(event){
+        event.preventDefault();
+        const userName = event.target.username.value;
+        const email = event.target.email.value;
+        const password = event.target.password.value;
+        
+        try {
+            const response = await fetch("/api/Auth/Register",{
+                method: "POST",
+                headers:{
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({email, userName, password})
+            })
+            const data = await response.json();
+            if ("DuplicateEmail" in data) {
+                throw new Error("Email already registered!");
+            }
+            if ("DuplicateUserName" in data) {
+                throw new Error("Username already registered!");
+            }
+            alert("Registration successful!");
+            navigate("/login");
+
+        } catch (e) {
+            alert("Registration failed!")
+            console.error(e);
+        }
         
     }
     return(<div className="registration">
