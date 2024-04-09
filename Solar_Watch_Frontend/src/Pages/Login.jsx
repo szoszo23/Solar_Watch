@@ -4,7 +4,33 @@ import { useNavigate } from "react-router-dom";
 function Login() {
     const navigate = useNavigate();
     async function handleSubmit(event) {
-        
+        event.preventDefault();
+        const email = event.target.email.value;
+        const password = event.target.password.value;
+        try {
+            const response = await fetch("/api/Auth/Login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    email,
+                    password,
+                }),
+            });
+            const data = await response.json();
+            if ("error" in data) {
+                throw new Error(data.error);
+            }
+            alert("Login successful!");
+            console.log(data);
+            sessionStorage.setItem("token", data.token);
+            console.log(sessionStorage);
+            navigate("/");
+        } catch (error) {
+            alert(error);
+            console.error("Error:", error);
+        }
     }
     return(<div>
         <h2>Login</h2>
