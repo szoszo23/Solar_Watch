@@ -23,9 +23,7 @@ function Login() {
                 throw new Error(data.error);
             }
             alert("Login successful!");
-            console.log(data);
             sessionStorage.setItem("token", data.token);
-            console.log(sessionStorage);
             navigate("/");
         } catch (error) {
             alert(error);
