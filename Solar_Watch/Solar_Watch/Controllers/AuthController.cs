@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Solar_Watch.Contracts;
 using Solar_Watch.Services.Authentication;
 
@@ -49,8 +50,29 @@ public class AuthController : ControllerBase
             AddErrors(result);
             return BadRequest(ModelState);
         }
-
-        return Ok(new AuthResponse(result.Email, result.UserName, result.Token));
+        Response.Cookies.Append("Authorization", result.Token, new CookieOptions
+        {
+            HttpOnly = true
+        });
+        return Ok(new AuthResponse(result.Email, result.UserName));
+    }
+    
+    [HttpGet("WhoAmI"), Authorize(Roles = "User,Admin")]
+    public ActionResult<AuthResponse> WhoAmI()
+    {
+        var cookieString = Request.Cookies["Authorization"];
+        
+        
+        var token = _authenticationService.Verify(cookieString);
+        
+        if (token != null)
+        {
+            var claims = token.Claims;
+            var email = claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
+            var username = claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name")?.Value;
+            return Ok(new AuthResponse(email, username));
+        }
+        return BadRequest("No token found");
     }
 
     private void AddErrors(AuthResult result)
