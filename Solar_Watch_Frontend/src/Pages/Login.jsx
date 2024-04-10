@@ -23,7 +23,6 @@ function Login() {
                 throw new Error(data.error);
             }
             alert("Login successful!");
-            sessionStorage.setItem("token", data.token);
             navigate("/");
         } catch (error) {
             alert(error);
