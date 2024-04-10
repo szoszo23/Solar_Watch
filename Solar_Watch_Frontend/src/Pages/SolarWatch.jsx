@@ -11,7 +11,29 @@ function SolarWatch() {
     const [hideResult, setHideResult] = useState(true);
     const [loading, setLoading] = useState(true);
 
-    
+    async function handleSubmit(event) {
+        event.preventDefault();
+        setLoading(false);
+        try {
+            const response = await fetch(`api/Solar/GetSunriseSunset?city=${city}&date=${date}`,
+                {
+                    method: "GET",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                })
+            const data = await response.json();
+            console.log(data)
+            setSunriseTime(data.sunrise);
+            setSunsetTime(data.sunset);
+            setLoading(true);
+            setHideResult(false);
+        } catch (e) {
+            console.error(e);
+        }
+
+    }
     
     function clearForm() {
         setCity("");
