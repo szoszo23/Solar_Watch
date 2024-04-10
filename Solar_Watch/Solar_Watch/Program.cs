@@ -41,7 +41,8 @@ app.Run();
 
 void AddServices()
 {
-    builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+    builder.Services.AddControllers();
+    builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSingleton<IGeoCodingApi>(provider =>
     {
         var logger = provider.GetRequiredService<ILogger<GeoCodingApi>>();
@@ -56,12 +57,12 @@ void AddServices()
     builder.Services.AddScoped<IAuthService, AuthService>();
     builder.Services.AddScoped<ITokenService, TokenService>();
     builder.Services.AddScoped<AuthenticationSeeder>();
+    builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 }
 
 void ConfigureSwagger()
 {
-    builder.Services.AddControllers();
-    builder.Services.AddEndpointsApiExplorer();
+
     builder.Services.AddSwaggerGen(option =>
     {
         option.SwaggerDoc("v1", new OpenApiInfo { Title = "Demo API", Version = "v1" });
@@ -111,6 +112,17 @@ void AddAuthentication()
                 ValidIssuer = jwtSettings.ValidIssuer,
                 ValidAudience = jwtSettings.ValidAudience,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(issuerSigningKey)),
+            };
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    if (context.Request.Cookies.ContainsKey("Authorization"))
+                    {
+                        context.Token = context.Request.Cookies["Authorization"];
+                    }
+                    return Task.CompletedTask;
+                }
             };
         });
 }
