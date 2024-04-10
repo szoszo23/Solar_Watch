@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Text;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Solar_Watch.Services.Authentication;
 
@@ -6,11 +9,13 @@ public class AuthService : IAuthService
 {
     private readonly UserManager<IdentityUser> _userManager;
     private readonly ITokenService _tokenService;
+    private readonly IConfiguration _configuration;
 
-    public AuthService(UserManager<IdentityUser> userManager, ITokenService tokenService)
+    public AuthService(UserManager<IdentityUser> userManager, ITokenService tokenService, IConfiguration configuration)
     {
         _userManager = userManager;
         _tokenService = tokenService;
+        _configuration = configuration;
     }
 
     public async Task<AuthResult> RegisterAsync(string email, string username, string password, string role)
@@ -46,6 +51,18 @@ public class AuthService : IAuthService
         var accessToken = _tokenService.CreateToken(managedUser, roles[0]);
 
         return new AuthResult(true, managedUser.Email, managedUser.UserName, accessToken);
+    }
+    
+    public JwtSecurityToken Verify(string token){
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.UTF8.GetBytes(_configuration.GetSection("IssuerSigningKey").Value);
+        tokenHandler.ValidateToken(token, new TokenValidationParameters{
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ValidateIssuerSigningKey = true,
+            ValidateIssuer = false,
+            ValidateAudience = false,
+        }, out SecurityToken validatedToken);
+        return (JwtSecurityToken)validatedToken;
     }
     
     private static AuthResult InvalidEmail(string email)
